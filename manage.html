@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice Padel · Property Manager</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232c; --line:#2a323d;
+    --ink:#e6edf3; --dim:#9aa7b4; --accent:#3fb950; --amber:#d29922; --red:#f85149; --blue:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:20}
+  header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.2px}
+  header .sp{flex:1}
+  .who{color:var(--dim);font-size:12px}
+  button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:7px 12px}
+  button:hover{border-color:#3d4854}
+  button.primary{background:#238636;border-color:#2ea043}
+  button.primary:hover{background:#2ea043}
+  button.danger{background:transparent;border-color:#5c2b2b;color:var(--red)}
+  button.danger:hover{background:#2d1618;border-color:var(--red)}
+  button.ghost{background:transparent}
+  main{padding:20px;max-width:1400px;margin:0 auto}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  input,select,textarea{font:inherit;background:#0d1117;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:7px 10px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
+  textarea{min-height:64px;resize:vertical}
+  .search{max-width:280px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--panel2);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);font-weight:600;cursor:pointer;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#1a212a}
+  .muted{color:var(--dim);font-size:12px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line);white-space:nowrap}
+  .ok{color:var(--accent);border-color:#1f6f31}
+  .amber{color:var(--amber);border-color:#6b5116}
+  .bad{color:var(--red);border-color:#6e2a2a}
+  .right{text-align:right}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:40px 16px}
+  .modal.on{display:flex}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:100%;max-width:760px;padding:22px}
+  .card h2{margin:0 0 16px;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .grid .full{grid-column:1/-1}
+  label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px}
+  .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+  .login{max-width:420px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:26px}
+  .login h1{font-size:18px;margin:0 0 6px}
+  .login p{color:var(--dim);margin:0 0 18px;font-size:13px}
+  .note{padding:10px 12px;border-radius:6px;font-size:13px;margin-top:12px}
+  .note.err{background:#2d1618;color:#ffb4ab;border:1px solid #6e2a2a}
+  .note.good{background:#12261a;color:#7ee787;border:1px solid #1f6f31}
+  .hide{display:none}
+  .count{color:var(--dim);font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="loginView">
+  <div class="login">
+    <h1>Slice Padel Property Manager</h1>
+    <p>Sign in with your email. We'll send you a one-time link, no password to remember.</p>
+    <label for="email">Email address</label>
+    <input id="email" type="email" placeholder="you@slicepadelclub.com" autocomplete="email">
+    <div class="actions" style="justify-content:stretch">
+      <button class="primary" id="sendLink" style="width:100%">Email me a sign-in link</button>
+    </div>
+    <div id="loginNote"></div>
+  </div>
+</div>
+
+<div id="appView" class="hide">
+  <header>
+    <h1>Slice Padel · Property Manager</h1>
+    <span class="count" id="count"></span>
+    <span class="sp"></span>
+    <span class="who" id="who"></span>
+    <button class="ghost" id="importBtn" title="Pull the listings that are still hard-coded in the dashboard into the database">Import from dashboard</button>
+    <button class="ghost" id="refresh">Refresh</button>
+    <button class="primary" id="addNew">Add property</button>
+    <button class="ghost" id="signOut">Sign out</button>
+  </header>
+  <main>
+    <div class="bar">
+      <input class="search" id="search" placeholder="Search address, suburb, notes...">
+      <select id="fStatus" style="width:auto"><option value="">All statuses</option></select>
+      <select id="fState" style="width:auto">
+        <option value="">All states</option><option>VIC</option><option>NSW</option>
+        <option>QLD</option><option>SA</option><option>WA</option><option>TAS</option><option>ACT</option><option>NT</option>
+      </select>
+      <select id="fHidden" style="width:auto">
+        <option value="live">Hide archived</option>
+        <option value="all">Show everything</option>
+        <option value="hidden">Archived only</option>
+      </select>
+    </div>
+    <div id="tableWrap"></div>
+    <div id="appNote"></div>
+  </main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="card">
+    <h2 id="modalTitle">Edit property</h2>
+    <div class="grid">
+      <div class="full"><label for="f_name">Address</label><input id="f_name" placeholder="12 Hampden Road, Cranbourne West"></div>
+      <div><label for="f_suburb">Suburb</label><input id="f_suburb"></div>
+      <div><label for="f_state">State</label>
+        <select id="f_state"><option value=""></option><option>VIC</option><option>NSW</option><option>QLD</option><option>SA</option><option>WA</option><option>TAS</option><option>ACT</option><option>NT</option></select>
+      </div>
+      <div><label for="f_postcode">Postcode</label><input id="f_postcode"></div>
+      <div><label for="f_region_label">Region label</label><input id="f_region_label" placeholder="Cranbourne West, VIC 3977 · South East"></div>
+      <div><label for="f_size_sqm">Size (sqm)</label><input id="f_size_sqm" type="number" step="1"></div>
+      <div><label for="f_rent_psm">Rent (A$ per sqm per year)</label><input id="f_rent_psm" type="number" step="0.01"></div>
+      <div><label for="f_pa">Rent headline</label><input id="f_pa" placeholder="A$160,000 pa net"></div>
+      <div><label for="f_parking">Parking</label><input id="f_parking" placeholder="Yes — 15 onsite"></div>
+      <div><label for="f_eaves">Clear height</label><input id="f_eaves" placeholder="8.5m or Not stated"></div>
+      <div><label for="f_eaves_state">Height confidence</label>
+        <select id="f_eaves_state"><option value="ok">Confirmed 6m+</option><option value="flag">Needs checking</option><option value="bad">Too low</option></select>
+      </div>
+      <div><label for="f_status">Status</label>
+        <select id="f_status">
+          <option value="new">New</option><option value="shortlist">Shortlist</option>
+          <option value="viewing">Viewing booked</option><option value="offer">Offer made</option>
+          <option value="rejected">Rejected</option><option value="dead">Dead</option>
+        </select>
+      </div>
+      <div><label for="f_added">Date added</label><input id="f_added" type="date"></div>
+      <div class="full"><label for="f_url">Listing URL</label><input id="f_url" placeholder="https://..."></div>
+      <div class="full"><label for="f_img">Photo URL</label><input id="f_img" placeholder="https://..."></div>
+      <div class="full"><label for="f_notes">Notes (agent, terms, listing detail)</label><textarea id="f_notes"></textarea></div>
+      <div class="full"><label for="f_owner_note">Your comments</label><textarea id="f_owner_note" placeholder="What you think, who you spoke to, next step..."></textarea></div>
+      <div><label for="f_liked">Shortlisted</label><select id="f_liked"><option value="false">No</option><option value="true">Yes</option></select></div>
+      <div><label for="f_hidden">Archived</label><select id="f_hidden"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div id="modalNote"></div>
+    <div class="actions">
+      <button class="danger" id="deleteBtn">Delete</button>
+      <span class="sp" style="flex:1"></span>
+      <button class="ghost" id="cancelBtn">Cancel</button>
+      <button class="primary" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://yllbjllmanykgwdrxljg.supabase.co';
+const SUPA_KEY = 'sb_publishable_B3-tuCZJGw4jc_qSn8WgBQ_wEDwdm98';
+const TABLE    = 'au_listings';
+const LS       = 'slice_session';
+
+const $ = id => document.getElementById(id);
+let session = null, rows = [], editing = null, sortKey = 'added', sortDir = -1;
+
+function note(el, msg, kind){ el.innerHTML = msg ? '<div class="note '+(kind||'err')+'">'+msg+'</div>' : ''; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- auth ---------- */
+function saveSession(s){ session = s; try{ localStorage.setItem(LS, JSON.stringify(s)); }catch(e){} }
+function loadSession(){ try{ return JSON.parse(localStorage.getItem(LS)||'null'); }catch(e){ return null; } }
+function clearSession(){ session = null; try{ localStorage.removeItem(LS); }catch(e){} }
+
+function readHashTokens(){
+  if(!location.hash) return null;
+  const p = new URLSearchParams(location.hash.slice(1));
+  const at = p.get('access_token');
+  if(!at) return null;
+  const s = { access_token: at, refresh_token: p.get('refresh_token'), expires_at: Date.now() + (parseInt(p.get('expires_in')||'3600',10)*1000) };
+  history.replaceState(null, '', location.pathname + location.search);
+  return s;
+}
+
+async function sendMagicLink(email){
+  const r = await fetch(SUPA_URL + '/auth/v1/otp', {
+    method:'POST', headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+    body: JSON.stringify({ email, create_user: true, options:{ email_redirect_to: location.origin + location.pathname } })
+  });
+  if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,300)); }
+}
+
+async function refreshIfNeeded(){
+  if(!session) return false;
+  if(session.expires_at && Date.now() < session.expires_at - 60000) return true;
+  if(!session.refresh_token) return false;
+  const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
+    method:'POST', headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+    body: JSON.stringify({ refresh_token: session.refresh_token })
+  });
+  if(!r.ok){ clearSession(); return false; }
+  const j = await r.json();
+  saveSession({ access_token:j.access_token, refresh_token:j.refresh_token, expires_at: Date.now() + (j.expires_in*1000), email: session.email });
+  return true;
+}
+
+async function whoAmI(){
+  const r = await fetch(SUPA_URL + '/auth/v1/user', { headers:{ 'apikey':SUPA_KEY, 'Authorization':'Bearer '+session.access_token } });
+  if(!r.ok) return null;
+  const j = await r.json();
+  return j.email || null;
+}
+
+/* ---------- data ---------- */
+async function api(path, opts){
+  await refreshIfNeeded();
+  opts = opts || {};
+  opts.headers = Object.assign({
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + (session ? session.access_token : ''),
+    'Content-Type': 'application/json'
+  }, opts.headers || {});
+  const r = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
+  if(!r.ok){
+    const t = await r.text();
+    if(r.status === 401 || r.status === 403) throw new Error('Not authorised. Your email needs the "au" region granted before you can see this data.');
+    throw new Error('Server said ' + r.status + ': ' + t.slice(0,300));
+  }
+  if(r.status === 204) return null;
+  const txt = await r.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+const load = () => api(TABLE + '?select=*');
+
+/* ---------- render ---------- */
+const STATUSES = ['new','shortlist','viewing','offer','rejected','dead'];
+const LABEL = { new:'New', shortlist:'Shortlist', viewing:'Viewing booked', offer:'Offer made', rejected:'Rejected', dead:'Dead' };
+
+function heightPill(r){
+  if(r.eaves_state === 'ok')  return '<span class="pill ok">'+esc(r.eaves||'6m+')+'</span>';
+  if(r.eaves_state === 'bad') return '<span class="pill bad">'+esc(r.eaves||'too low')+'</span>';
+  return '<span class="pill amber">'+esc(r.eaves||'Not stated')+'</span>';
+}
+
+function visible(){
+  const q = $('search').value.trim().toLowerCase();
+  const st = $('fStatus').value, state = $('fState').value, h = $('fHidden').value;
+  return rows.filter(r => {
+    if(h === 'live' && r.hidden) return false;
+    if(h === 'hidden' && !r.hidden) return false;
+    if(st && r.status !== st) return false;
+    if(state && r.state !== state) return false;
+    if(q){
+      const hay = [r.name,r.suburb,r.region_label,r.notes,r.owner_note,r.pa].join(' ').toLowerCase();
+      if(hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    let x = a[sortKey], y = b[sortKey];
+    if(x == null) x = ''; if(y == null) y = '';
+    if(typeof x === 'number' && typeof y === 'number') return (x - y) * sortDir;
+    return String(x).localeCompare(String(y)) * sortDir;
+  });
+}
+
+function render(){
+  const list = visible();
+  $('count').textContent = list.length + ' of ' + rows.length + ' properties';
+  const cols = [['name','Address'],['state','State'],['size_sqm','Size'],['rent_psm','A$/sqm'],['eaves','Height'],['status','Status'],['added','Added']];
+  let h = '<table><thead><tr>';
+  cols.forEach(c => h += '<th data-k="'+c[0]+'">'+c[1]+(sortKey===c[0]?(sortDir>0?' ▲':' ▼'):'')+'</th>');
+  h += '<th></th></tr></thead><tbody>';
+  if(!list.length) h += '<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">Nothing here yet. Use “Add property” to put one in.</td></tr>';
+  list.forEach(r => {
+    h += '<tr>'
+      + '<td><strong>'+esc(r.name)+'</strong>'
+        + (r.liked ? ' <span class="pill ok">shortlist</span>' : '')
+        + (r.hidden ? ' <span class="pill">archived</span>' : '')
+        + '<div class="muted">'+esc(r.region_label||'')+'</div>'
+        + (r.owner_note ? '<div class="muted">“'+esc(r.owner_note.slice(0,110))+'”</div>' : '')
+        + '</td>'
+      + '<td>'+esc(r.state||'')+'</td>'
+      + '<td>'+(r.size_sqm ? Number(r.size_sqm).toLocaleString()+' sqm' : '<span class="muted">—</span>')+'</td>'
+      + '<td>'+(r.rent_psm ? 'A$'+Number(r.rent_psm).toFixed(2) : '<span class="muted">—</span>')
+        + (r.pa ? '<div class="muted">'+esc(r.pa)+'</div>' : '')+'</td>'
+      + '<td>'+heightPill(r)+'</td>'
+      + '<td><span class="pill">'+esc(LABEL[r.status]||r.status||'new')+'</span></td>'
+      + '<td class="muted">'+esc(r.added||'')+'</td>'
+      + '<td class="right">'
+        + (r.url ? '<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="color:var(--blue);margin-right:10px">View</a>' : '')
+        + '<button data-edit="'+esc(r.id)+'">Edit</button></td>'
+      + '</tr>';
+  });
+  h += '</tbody></table>';
+  $('tableWrap').innerHTML = h;
+  $('tableWrap').querySelectorAll('th[data-k]').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if(sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = 1; }
+    render();
+  });
+  $('tableWrap').querySelectorAll('button[data-edit]').forEach(b => b.onclick = () => openEdit(b.dataset.edit));
+}
+
+/* ---------- edit ---------- */
+const FIELDS = ['name','suburb','state','postcode','region_label','size_sqm','rent_psm','pa','parking','eaves','eaves_state','status','added','url','img','notes','owner_note','liked','hidden'];
+
+function openEdit(id){
+  editing = id ? rows.find(r => r.id === id) : null;
+  $('modalTitle').textContent = editing ? 'Edit property' : 'Add property';
+  $('deleteBtn').style.display = editing ? '' : 'none';
+  FIELDS.forEach(f => {
+    let v = editing ? editing[f] : '';
+    if(f === 'status' && !editing) v = 'new';
+    if(f === 'eaves_state' && !editing) v = 'flag';
+    if(f === 'added' && !editing) v = new Date().toISOString().slice(0,10);
+    if(f === 'liked' || f === 'hidden') v = String(!!(editing && editing[f]));
+    $('f_'+f).value = (v == null ? '' : v);
+  });
+  note($('modalNote'), '');
+  $('modal').classList.add('on');
+}
+function closeEdit(){ $('modal').classList.remove('on'); editing = null; }
+
+function collect(){
+  const o = {};
+  FIELDS.forEach(f => {
+    let v = $('f_'+f).value;
+    if(f === 'liked' || f === 'hidden') o[f] = (v === 'true');
+    else if(f === 'size_sqm' || f === 'rent_psm') o[f] = (v === '' ? null : Number(v));
+    else o[f] = (v === '' ? null : v);
+  });
+  if(!o.added) o.added = new Date().toISOString().slice(0,10);
+  o.updated_by = session.email || null;
+  return o;
+}
+
+async function save(){
+  const body = collect();
+  if(!body.name){ note($('modalNote'), 'An address is required.'); return; }
+  $('saveBtn').disabled = true;
+  try{
+    if(editing){
+      await api(TABLE + '?id=eq.' + encodeURIComponent(editing.id), { method:'PATCH', headers:{Prefer:'return=minimal'}, body: JSON.stringify(body) });
+    }else{
+      body.id = 'manual-' + Date.now().toString(36);
+      body.source = 'manual';
+      body.created_by = session.email || null;
+      await api(TABLE, { method:'POST', headers:{Prefer:'return=minimal'}, body: JSON.stringify(body) });
+    }
+    closeEdit();
+    await reload();
+  }catch(e){ note($('modalNote'), esc(e.message)); }
+  $('saveBtn').disabled = false;
+}
+
+async function remove(){
+  if(!editing) return;
+  if(!confirm('Delete "' + editing.name + '" permanently?\n\nIf you just want it out of the way, set Archived to Yes instead.')) return;
+  try{
+    await api(TABLE + '?id=eq.' + encodeURIComponent(editing.id), { method:'DELETE', headers:{Prefer:'return=minimal'} });
+    closeEdit();
+    await reload();
+  }catch(e){ note($('modalNote'), esc(e.message)); }
+}
+
+/* ---------- one-off import of the listings still hard-coded in index.html ---------- */
+function parseSeedFromHtml(html){
+  const i = html.search(/(?:const|var|let)\s+sites\s*=\s*\[/);
+  if(i < 0) throw new Error('Could not find the sites list in index.html.');
+  const start = html.indexOf('[', i);
+  const end = html.indexOf('];', start);
+  if(end < 0) throw new Error('The sites list in index.html looks malformed.');
+  const arr = Function('return (' + html.slice(start, end + 1) + ')')();
+  if(!Array.isArray(arr)) throw new Error('The sites list did not parse to an array.');
+  return arr.map(s => {
+    const m = String(s.region || '').match(/^([^,]+),\s*(VIC|NSW|QLD|SA|WA|TAS|NT|ACT)\s*(\d{4})?/);
+    const sizeDigits = String(s.size || '').replace(/[^0-9.]/g, '');
+    return {
+      id: String(s.id),
+      added: s.added || new Date().toISOString().slice(0,10),
+      source: /^RW-/.test(String(s.id)) ? 'raywhite' : 'domain',
+      url: s.url || null,
+      img: s.img || null,
+      name: s.name,
+      region_label: s.region || null,
+      state: m ? m[2] : null,
+      suburb: m ? m[1].trim() : null,
+      postcode: m && m[3] ? m[3] : null,
+      size_sqm: sizeDigits ? Number(sizeDigits) : null,
+      rent_psm: (s.rent !== undefined && s.rent !== null && s.rent !== '') ? Number(s.rent) : null,
+      pa: s.pa || null,
+      eaves: s.eaves || null,
+      eaves_state: s.eavesState || 'flag',
+      parking: s.parking || null,
+      notes: s.notes || null,
+      badges: s.badges || [],
+      wm: !!s.wm
+    };
+  });
+}
+
+async function importFromDashboard(){
+  const btn = $('importBtn');
+  btn.disabled = true;
+  try{
+    const r = await fetch('./index.html', { cache:'no-store' });
+    if(!r.ok) throw new Error('Could not read index.html (' + r.status + ').');
+    const seed = parseSeedFromHtml(await r.text());
+    const have = new Set(rows.map(x => x.id));
+    const fresh = seed.filter(x => !have.has(x.id));
+    if(!fresh.length){
+      note($('appNote'), 'Nothing to import, all ' + seed.length + ' dashboard listings are already in the database.', 'good');
+      btn.disabled = false; return;
+    }
+    if(!confirm('Import ' + fresh.length + ' listing(s) from the dashboard into the database?')){ btn.disabled = false; return; }
+    for(const row of fresh){ row.created_by = session.email || null; }
+    await api(TABLE, {
+      method:'POST',
+      headers:{ Prefer:'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(fresh)
+    });
+    await reload();
+    note($('appNote'), 'Imported ' + fresh.length + ' listing(s).', 'good');
+  }catch(e){ note($('appNote'), esc(e.message)); }
+  btn.disabled = false;
+}
+
+async function reload(){
+  try{
+    rows = await load() || [];
+    note($('appNote'), '');
+    render();
+  }catch(e){
+    note($('appNote'), esc(e.message));
+    $('tableWrap').innerHTML = '';
+  }
+}
+
+/* ---------- boot ---------- */
+async function showApp(){
+  $('loginView').classList.add('hide');
+  $('appView').classList.remove('hide');
+  const email = await whoAmI();
+  if(email){ session.email = email; saveSession(session); }
+  $('who').textContent = email || '';
+  await reload();
+}
+
+async function boot(){
+  STATUSES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = LABEL[s]; $('fStatus').appendChild(o); });
+
+  const fromHash = readHashTokens();
+  if(fromHash) saveSession(fromHash); else session = loadSession();
+
+  if(session && await refreshIfNeeded()) { await showApp(); }
+  else { clearSession(); $('loginView').classList.remove('hide'); }
+
+  $('sendLink').onclick = async () => {
+    const email = $('email').value.trim();
+    if(!email){ note($('loginNote'), 'Pop your email address in first.'); return; }
+    $('sendLink').disabled = true;
+    try{
+      await sendMagicLink(email);
+      note($('loginNote'), 'Link sent. Check your inbox, and the spam folder if it is not there in a minute.', 'good');
+    }catch(e){ note($('loginNote'), 'Could not send that: ' + esc(e.message)); }
+    $('sendLink').disabled = false;
+  };
+  $('email').onkeydown = e => { if(e.key === 'Enter') $('sendLink').click(); };
+
+  $('signOut').onclick = () => { clearSession(); location.reload(); };
+  $('refresh').onclick = reload;
+  $('importBtn').onclick = importFromDashboard;
+  $('addNew').onclick = () => openEdit(null);
+  $('saveBtn').onclick = save;
+  $('deleteBtn').onclick = remove;
+  $('cancelBtn').onclick = closeEdit;
+  $('modal').onclick = e => { if(e.target === $('modal')) closeEdit(); };
+  document.onkeydown = e => { if(e.key === 'Escape') closeEdit(); };
+  ['search','fStatus','fState','fHidden'].forEach(id => $(id).oninput = render);
+}
+boot();
+</script>
+</body>
+</html>
