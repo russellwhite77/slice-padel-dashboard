@@ -174,9 +174,10 @@ function readHashTokens(){
 }
 
 async function sendMagicLink(email){
-  const r = await fetch(SUPA_URL + '/auth/v1/otp', {
+  const redirectTo = encodeURIComponent(location.origin + location.pathname);
+  const r = await fetch(SUPA_URL + '/auth/v1/otp?redirect_to=' + redirectTo, {
     method:'POST', headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-    body: JSON.stringify({ email, create_user: true, options:{ email_redirect_to: location.origin + location.pathname } })
+    body: JSON.stringify({ email, create_user: true })
   });
   if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,300)); }
 }
