@@ -190,14 +190,14 @@ Source: realcommercial.com.au and Domain Commercial, live at time of search 29 J
 <div><h2 class="cp-title">Club Projection</h2><p class="cp-sub">Estimate monthly &amp; yearly revenue for a club layout</p></div></div>
 <div class="cp-seclabel">Inputs</div><div class="cp-secnote">Court mix, opening hours and peak / off-peak rates</div>
 <div class="cp-grid3">
-<div><div class="cp-flabel">Indoor courts</div><div class="cp-stepper" data-step="indoor"><button data-dir="-1">−</button><div class="cp-val"><span data-out="indoor">3</span></div><button data-dir="1">+</button></div></div>
+<div><div class="cp-flabel">Indoor courts</div><div class="cp-stepper" data-step="indoor"><button data-dir="-1">−</button><div class="cp-val"><span data-out="indoor">2</span></div><button data-dir="1">+</button></div></div>
 <div><div class="cp-flabel">Outdoor courts</div><div class="cp-stepper" data-step="outdoor"><button data-dir="-1">−</button><div class="cp-val"><span data-out="outdoor">0</span></div><button data-dir="1">+</button></div></div>
-<div><div class="cp-flabel">Covered courts</div><div class="cp-stepper" data-step="covered"><button data-dir="-1">−</button><div class="cp-val"><span data-out="covered">1</span></div><button data-dir="1">+</button></div></div>
+<div><div class="cp-flabel">Covered courts</div><div class="cp-stepper" data-step="covered"><button data-dir="-1">−</button><div class="cp-val"><span data-out="covered">0</span></div><button data-dir="1">+</button></div></div>
 </div>
 <div class="cp-grid3" style="margin-top:14px">
 <div><div class="cp-flabel">Singles courts</div><div class="cp-stepper" data-step="singles"><button data-dir="-1">−</button><div class="cp-val"><span data-out="singles">0</span></div><button data-dir="1">+</button></div></div>
 <div><div class="cp-flabel">Operating hours / day</div><div class="cp-stepper" data-step="hours"><button data-dir="-1">−</button><div class="cp-val"><span data-out="hours">17</span><small>h</small></div><button data-dir="1">+</button></div></div>
-<div><div class="cp-flabel">Total</div><div class="cp-pill"><b id="cpTotal">4</b> total courts</div></div>
+<div><div class="cp-flabel">Total</div><div class="cp-pill"><b id="cpTotal">2</b> total courts</div></div>
 </div>
 <div class="cp-grid2" style="margin-top:14px">
 <div><div class="cp-flabel">Opens at</div><input type="time" id="cpOpen" value="06:00" style="width:100%;height:50px;border:1px solid var(--line);border-radius:11px;padding:0 14px;font-size:16px;font-weight:700;color:var(--ink);background:#fff"></div>
@@ -220,8 +220,8 @@ Source: realcommercial.com.au and Domain Commercial, live at time of search 29 J
 <input type="number" min="0" data-rate="stdPeak" value="80" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
 <input type="number" min="0" data-rate="stdOff" value="60" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
 <div style="font-size:13.5px;font-weight:600">Singles courts</div>
-<input type="number" min="0" data-rate="sinPeak" value="30" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
-<input type="number" min="0" data-rate="sinOff" value="22" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
+<input type="number" min="0" data-rate="sinPeak" value="45" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
+<input type="number" min="0" data-rate="sinOff" value="30" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
 </div>
 </div>
 <div style="margin-top:18px"><div class="cp-flabel">Expected occupancy — how full you think the courts will be</div>
@@ -490,7 +490,7 @@ loadListings().then(function(){ setStats(); render('all'); });
 </script>
 
 <script>(function(){
-var D={indoor:3,outdoor:0,covered:1,singles:0,hours:17,open:6,occ:58.5,dpm:30.44,stdPeak:80,stdOff:60,sinPeak:30,sinOff:22,wkPkStart:16,wkPkEnd:22};
+var D={indoor:2,outdoor:0,covered:0,singles:0,hours:17,open:6,occ:58.5,dpm:30.44,stdPeak:80,stdOff:60,sinPeak:45,sinOff:30,wkPkStart:16,wkPkEnd:22};
 var S=Object.assign({},D);
 var LIM={indoor:[0,40],outdoor:[0,40],covered:[0,40],singles:[0,40],hours:[1,24]};
 var root=document.getElementById('tab-projection'); if(!root)return;
