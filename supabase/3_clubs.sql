@@ -1,7 +1,3 @@
--- Slice Padel dashboard — competitor clubs, editable from manage.html
--- Run once in Supabase: SQL Editor > New query > paste this whole file > Run
--- Safe to run more than once.
-
 create table if not exists au_clubs (
   id bigint generated always as identity primary key,
   name text not null,
@@ -39,7 +35,6 @@ create policy "signed-in users can delete au_clubs"
   to authenticated
   using (true);
 
--- Starting data: the 39 clubs currently in au_clubs.json (only inserted if the table is empty)
 insert into au_clubs (name, lat, lng, indoor, outdoor)
 select * from (values
   ('Indoor Padel Australia - Alexandria', -33.9186, 151.1915, 8, 2),
