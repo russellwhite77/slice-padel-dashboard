@@ -55,6 +55,9 @@
   .note.good{background:#12261a;color:#7ee787;border:1px solid #1f6f31}
   .hide{display:none}
   .count{color:var(--dim);font-size:12px}
+  .tabs{display:flex;gap:8px;margin-bottom:16px}
+  .tab{background:transparent;color:var(--dim)}
+  .tab.on{background:var(--panel2);color:var(--ink);border-color:var(--blue)}
 </style>
 </head>
 <body>
@@ -84,6 +87,11 @@
     <button class="ghost" id="signOut">Sign out</button>
   </header>
   <main>
+    <div class="tabs">
+      <button class="tab on" id="tabProps">Properties</button>
+      <button class="tab" id="tabClubs">Competitor clubs</button>
+    </div>
+    <div id="propsView">
     <div class="bar">
       <input class="search" id="search" placeholder="Search address, suburb, notes...">
       <select id="fStatus" style="width:auto"><option value="">All statuses</option></select>
@@ -99,7 +107,41 @@
     </div>
     <div id="tableWrap"></div>
     <div id="appNote"></div>
+    </div>
+    <div id="clubsView" class="hide">
+      <div class="bar">
+        <input class="search" id="clubSearch" placeholder="Search clubs...">
+        <span class="sp" style="flex:1"></span>
+        <button class="primary" id="addClub">Add club</button>
+      </div>
+      <p class="muted" style="margin:0 0 12px">These clubs feed the Opportunity Map. Changes appear on the public dashboard the next time the page is loaded.</p>
+      <div id="clubTable"></div>
+      <div id="clubNote"></div>
+    </div>
   </main>
+</div>
+
+<div class="modal" id="clubModal">
+  <div class="card">
+    <h2 id="clubModalTitle">Add club</h2>
+    <div class="grid">
+      <div class="full"><label for="c_name">Club name</label><input id="c_name" placeholder="Game4Padel - Docklands"></div>
+      <div class="full"><label for="c_addr">Find location by address or suburb</label>
+        <div style="display:flex;gap:8px"><input id="c_addr" placeholder="e.g. Docklands VIC"><button id="c_find" style="white-space:nowrap">Find</button></div>
+      </div>
+      <div><label for="c_lat">Latitude</label><input id="c_lat" type="number" step="any" placeholder="-37.8212"></div>
+      <div><label for="c_lng">Longitude</label><input id="c_lng" type="number" step="any" placeholder="144.9331"></div>
+      <div><label for="c_indoor">Indoor courts</label><input id="c_indoor" type="number" min="0" step="1" value="0"></div>
+      <div><label for="c_outdoor">Outdoor courts</label><input id="c_outdoor" type="number" min="0" step="1" value="0"></div>
+    </div>
+    <div id="clubModalNote"></div>
+    <div class="actions">
+      <button class="danger" id="clubDelete">Delete</button>
+      <span class="sp" style="flex:1"></span>
+      <button class="ghost" id="clubCancel">Cancel</button>
+      <button class="primary" id="clubSave">Save</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal" id="modal">
@@ -429,6 +471,126 @@ async function reload(){
   }
 }
 
+/* ---------- competitor clubs ---------- */
+const CLUB_TABLE = 'au_clubs';
+let clubs = [], editingClub = null, clubSortKey = 'name', clubSortDir = 1, view = 'props';
+
+function setView(v){
+  view = v;
+  const c = v === 'clubs';
+  $('propsView').classList.toggle('hide', c);
+  $('clubsView').classList.toggle('hide', !c);
+  $('tabProps').classList.toggle('on', !c);
+  $('tabClubs').classList.toggle('on', c);
+  $('importBtn').classList.toggle('hide', c);
+  $('addNew').classList.toggle('hide', c);
+  if(c) reloadClubs(); else render();
+}
+
+async function reloadClubs(){
+  try{
+    clubs = await api(CLUB_TABLE + '?select=*&order=name') || [];
+    note($('clubNote'), '');
+    renderClubs();
+  }catch(e){
+    note($('clubNote'), esc(e.message) + ' If this says the table does not exist, run supabase/3_clubs.sql in Supabase first.');
+    $('clubTable').innerHTML = '';
+  }
+}
+
+function renderClubs(){
+  const q = $('clubSearch').value.trim().toLowerCase();
+  const list = clubs.filter(c => !q || String(c.name||'').toLowerCase().indexOf(q) !== -1).sort((a,b) => {
+    let x = a[clubSortKey], y = b[clubSortKey];
+    if(typeof x === 'number' && typeof y === 'number') return (x - y) * clubSortDir;
+    return String(x||'').localeCompare(String(y||'')) * clubSortDir;
+  });
+  const courts = list.reduce((t,c) => t + (c.indoor||0) + (c.outdoor||0), 0);
+  $('count').textContent = list.length + ' of ' + clubs.length + ' clubs · ' + courts + ' courts';
+  const cols = [['name','Club'],['indoor','Indoor'],['outdoor','Outdoor']];
+  let h = '<table><thead><tr>';
+  cols.forEach(c => h += '<th data-ck="'+c[0]+'">'+c[1]+(clubSortKey===c[0]?(clubSortDir>0?' ▲':' ▼'):'')+'</th>');
+  h += '<th>Location</th><th></th></tr></thead><tbody>';
+  if(!list.length) h += '<tr><td colspan="5" class="muted" style="padding:24px;text-align:center">No clubs yet. Use “Add club” to put one in.</td></tr>';
+  list.forEach(c => {
+    h += '<tr><td><strong>'+esc(c.name)+'</strong></td>'
+      + '<td>'+(c.indoor||0)+'</td><td>'+(c.outdoor||0)+'</td>'
+      + '<td class="muted">'+Number(c.lat).toFixed(4)+', '+Number(c.lng).toFixed(4)+'</td>'
+      + '<td class="right"><button data-cedit="'+esc(c.id)+'">Edit</button></td></tr>';
+  });
+  h += '</tbody></table>';
+  $('clubTable').innerHTML = h;
+  $('clubTable').querySelectorAll('th[data-ck]').forEach(th => th.onclick = () => {
+    const k = th.dataset.ck;
+    if(clubSortKey === k) clubSortDir = -clubSortDir; else { clubSortKey = k; clubSortDir = 1; }
+    renderClubs();
+  });
+  $('clubTable').querySelectorAll('button[data-cedit]').forEach(b => b.onclick = () => openClub(b.dataset.cedit));
+}
+
+function openClub(id){
+  editingClub = id ? clubs.find(c => String(c.id) === String(id)) : null;
+  $('clubModalTitle').textContent = editingClub ? 'Edit club' : 'Add club';
+  $('clubDelete').style.display = editingClub ? '' : 'none';
+  $('c_name').value = editingClub ? editingClub.name : '';
+  $('c_addr').value = '';
+  $('c_lat').value = editingClub ? editingClub.lat : '';
+  $('c_lng').value = editingClub ? editingClub.lng : '';
+  $('c_indoor').value = editingClub ? (editingClub.indoor||0) : 0;
+  $('c_outdoor').value = editingClub ? (editingClub.outdoor||0) : 0;
+  note($('clubModalNote'), '');
+  $('clubModal').classList.add('on');
+}
+function closeClub(){ $('clubModal').classList.remove('on'); editingClub = null; }
+
+async function findClubLocation(){
+  const q = $('c_addr').value.trim();
+  if(!q){ note($('clubModalNote'), 'Type an address or suburb first.'); return; }
+  note($('clubModalNote'), 'Looking up…', 'good');
+  try{
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=au&q=' + encodeURIComponent(q));
+    const a = await r.json();
+    if(a && a[0]){
+      $('c_lat').value = (+a[0].lat).toFixed(4);
+      $('c_lng').value = (+a[0].lon).toFixed(4);
+      note($('clubModalNote'), 'Found: ' + esc(a[0].display_name), 'good');
+    }else note($('clubModalNote'), 'No match. Try a suburb name, or enter latitude and longitude yourself.');
+  }catch(e){ note($('clubModalNote'), 'Lookup failed. Enter latitude and longitude yourself.'); }
+}
+
+async function saveClub(){
+  const name = $('c_name').value.trim();
+  const lat = parseFloat($('c_lat').value), lng = parseFloat($('c_lng').value);
+  if(!name){ note($('clubModalNote'), 'A club name is required.'); return; }
+  if(isNaN(lat) || isNaN(lng)){ note($('clubModalNote'), 'Latitude and longitude are required. Use “Find” to fill them in.'); return; }
+  if(lat < -45 || lat > -9 || lng < 112 || lng > 155){ note($('clubModalNote'), 'That location is not in Australia. Check the latitude (should be negative) and longitude.'); return; }
+  const body = {
+    name, lat, lng,
+    indoor: Math.max(0, parseInt($('c_indoor').value) || 0),
+    outdoor: Math.max(0, parseInt($('c_outdoor').value) || 0),
+    updated_by: session.email || null,
+    updated_at: new Date().toISOString()
+  };
+  $('clubSave').disabled = true;
+  try{
+    if(editingClub) await api(CLUB_TABLE + '?id=eq.' + encodeURIComponent(editingClub.id), { method:'PATCH', headers:{Prefer:'return=minimal'}, body: JSON.stringify(body) });
+    else await api(CLUB_TABLE, { method:'POST', headers:{Prefer:'return=minimal'}, body: JSON.stringify(body) });
+    closeClub();
+    await reloadClubs();
+  }catch(e){ note($('clubModalNote'), esc(e.message)); }
+  $('clubSave').disabled = false;
+}
+
+async function removeClub(){
+  if(!editingClub) return;
+  if(!confirm('Delete "' + editingClub.name + '" permanently?')) return;
+  try{
+    await api(CLUB_TABLE + '?id=eq.' + encodeURIComponent(editingClub.id), { method:'DELETE', headers:{Prefer:'return=minimal'} });
+    closeClub();
+    await reloadClubs();
+  }catch(e){ note($('clubModalNote'), esc(e.message)); }
+}
+
 /* ---------- boot ---------- */
 async function showApp(){
   $('loginView').classList.add('hide');
@@ -461,14 +623,24 @@ async function boot(){
   $('email').onkeydown = e => { if(e.key === 'Enter') $('sendLink').click(); };
 
   $('signOut').onclick = () => { clearSession(); location.reload(); };
-  $('refresh').onclick = reload;
+  $('refresh').onclick = () => view === 'clubs' ? reloadClubs() : reload();
   $('importBtn').onclick = importFromDashboard;
   $('addNew').onclick = () => openEdit(null);
   $('saveBtn').onclick = save;
   $('deleteBtn').onclick = remove;
   $('cancelBtn').onclick = closeEdit;
   $('modal').onclick = e => { if(e.target === $('modal')) closeEdit(); };
-  document.onkeydown = e => { if(e.key === 'Escape') closeEdit(); };
+  document.onkeydown = e => { if(e.key === 'Escape'){ closeEdit(); closeClub(); } };
+  $('tabProps').onclick = () => setView('props');
+  $('tabClubs').onclick = () => setView('clubs');
+  $('addClub').onclick = () => openClub(null);
+  $('clubSave').onclick = saveClub;
+  $('clubDelete').onclick = removeClub;
+  $('clubCancel').onclick = closeClub;
+  $('c_find').onclick = findClubLocation;
+  $('c_addr').onkeydown = e => { if(e.key === 'Enter') findClubLocation(); };
+  $('clubModal').onclick = e => { if(e.target === $('clubModal')) closeClub(); };
+  $('clubSearch').oninput = renderClubs;
   ['search','fStatus','fState','fHidden'].forEach(id => $(id).oninput = render);
 }
 boot();

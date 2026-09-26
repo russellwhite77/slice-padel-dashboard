@@ -1,0 +1,85 @@
+-- Slice Padel dashboard — competitor clubs, editable from manage.html
+-- Run once in Supabase: SQL Editor > New query > paste this whole file > Run
+-- Safe to run more than once.
+
+create table if not exists au_clubs (
+  id bigint generated always as identity primary key,
+  name text not null,
+  lat double precision not null,
+  lng double precision not null,
+  indoor integer not null default 0,
+  outdoor integer not null default 0,
+  updated_by text,
+  updated_at timestamptz default now()
+);
+
+alter table au_clubs enable row level security;
+
+drop policy if exists "anyone can read au_clubs" on au_clubs;
+create policy "anyone can read au_clubs"
+  on au_clubs for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "signed-in users can add au_clubs" on au_clubs;
+create policy "signed-in users can add au_clubs"
+  on au_clubs for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "signed-in users can update au_clubs" on au_clubs;
+create policy "signed-in users can update au_clubs"
+  on au_clubs for update
+  to authenticated
+  using (true) with check (true);
+
+drop policy if exists "signed-in users can delete au_clubs" on au_clubs;
+create policy "signed-in users can delete au_clubs"
+  on au_clubs for delete
+  to authenticated
+  using (true);
+
+-- Starting data: the 39 clubs currently in au_clubs.json (only inserted if the table is empty)
+insert into au_clubs (name, lat, lng, indoor, outdoor)
+select * from (values
+  ('Indoor Padel Australia - Alexandria', -33.9186, 151.1915, 8, 2),
+  ('Indoor Padel Australia - Northern Beaches', -33.7377, 151.2862, 4, 0),
+  ('Padel Club Australia - North Rocks', -33.775, 151.0094, 6, 0),
+  ('The Padel Lounge - Greenacre', -33.9025, 151.0683, 4, 0),
+  ('Padel Point - Bankstown', -33.9243, 150.9902, 4, 0),
+  ('Padel Spot - Minto', -34.0242, 150.837, 6, 0),
+  ('Play Nation - Smeaton Grange', -34.036, 150.7551, 6, 0),
+  ('Racqueteer - Lidcombe', -33.8525, 151.0603, 6, 0),
+  ('Sidewall Social Padel Club - Marrickville', -33.92, 151.155, 5, 0),
+  ('Sydney Racquet Club - Moore Park', -33.895, 151.2263, 0, 3),
+  ('Tribe Padel - North Ryde', -33.7946, 151.1337, 0, 5),
+  ('House of Pickle - Albion Park', -34.5626, 150.7978, 1, 1),
+  ('La Palma Padel Club - Tuggerah', -33.3135, 151.4216, 3, 0),
+  ('The Town Padel - Coffs Harbour', -30.2959, 153.1115, 0, 4),
+  ('Sol Padel - Albury', -36.0456, 146.9989, 0, 4),
+  ('Canberra Racquet Club - Fyshwick', -35.3248, 149.1557, 6, 0),
+  ('Game4Padel - Docklands', -37.8212, 144.9331, 7, 0),
+  ('Game4Padel - Richmond', -37.8133, 145.0108, 0, 6),
+  ('Nordic Padel - Tullamarine', -37.7022, 144.8842, 5, 0),
+  ('iPadel Melbourne - Reservoir', -37.7184, 144.9802, 4, 0),
+  ('Recess Padel Club - Port Melbourne', -37.8301, 144.921, 4, 1),
+  ('South East Padel - Noble Park', -37.9634, 145.1737, 0, 3),
+  ('Colosso Padel - Brighton', -37.9245, 145.0238, 0, 6),
+  ('Colosso Padel - Westfield Southland', -37.9607, 145.0548, 0, 3),
+  ('Noo''s Padel - South Yarra', -37.8452, 144.9947, 0, 6),
+  ('Tribe Padel & Wellness - Cheltenham', -37.961, 145.0308, 7, 0),
+  ('Padel Brisbane - The Gap', -27.4308, 152.9427, 0, 4),
+  ('Gizmo Courts - Underwood', -27.6106, 153.1109, 0, 2),
+  ('Padel Gold Coast at KDV - Carrara', -28.0154, 153.3824, 0, 6),
+  ('Racquet Club Gold Coast - Robina', -28.075, 153.3832, 0, 7),
+  ('Ace Padel Clubs - Forest Glen', -26.6738, 153.0048, 4, 0),
+  ('Padel Perth - Reabold', -31.9373, 115.7787, 0, 3),
+  ('Padel West - Melville', -32.0341, 115.7941, 0, 2),
+  ('West Coast Padel - Dalkeith', -32.0026, 115.797, 0, 3),
+  ('Padel Crush - Wembley', -31.9307, 115.8224, 0, 4),
+  ('Padel360 - Cockburn', -32.1264, 115.8024, 0, 4),
+  ('Padel Kennedy Bay - Port Kennedy', -32.3671, 115.7397, 0, 4),
+  ('Padel Fit - Thebarton', -34.9174, 138.5747, 3, 1),
+  ('The Racquet Collective - Kings Meadows', -41.4636, 147.161, 2, 0)
+) as v(name, lat, lng, indoor, outdoor)
+where not exists (select 1 from au_clubs);
