@@ -219,7 +219,7 @@ async function sendMagicLink(email){
   const redirectTo = encodeURIComponent(location.origin + location.pathname);
   const r = await fetch(SUPA_URL + '/auth/v1/otp?redirect_to=' + redirectTo, {
     method:'POST', headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-    body: JSON.stringify({ email, create_user: true })
+    body: JSON.stringify({ email, create_user: false })
   });
   if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,300)); }
 }
@@ -257,7 +257,7 @@ async function api(path, opts){
   const r = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
   if(!r.ok){
     const t = await r.text();
-    if(r.status === 401 || r.status === 403) throw new Error('Not authorised. Your email needs the "au" region granted before you can see this data.');
+    if(r.status === 401 || r.status === 403) throw new Error('Not authorised. Only the site owner can make changes.');
     throw new Error('Server said ' + r.status + ': ' + t.slice(0,300));
   }
   if(r.status === 204) return null;
