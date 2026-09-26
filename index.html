@@ -196,23 +196,29 @@ Source: realcommercial.com.au and Domain Commercial, live at time of search 29 J
 </div>
 <div class="cp-grid3" style="margin-top:14px">
 <div><div class="cp-flabel">Singles courts</div><div class="cp-stepper" data-step="singles"><button data-dir="-1">−</button><div class="cp-val"><span data-out="singles">0</span></div><button data-dir="1">+</button></div></div>
-<div><div class="cp-flabel">Operating hours / day</div><div class="cp-stepper" data-step="hours"><button data-dir="-1">−</button><div class="cp-val"><span data-out="hours">14</span><small>h</small></div><button data-dir="1">+</button></div></div>
+<div><div class="cp-flabel">Operating hours / day</div><div class="cp-stepper" data-step="hours"><button data-dir="-1">−</button><div class="cp-val"><span data-out="hours">17</span><small>h</small></div><button data-dir="1">+</button></div></div>
 <div><div class="cp-flabel">Total</div><div class="cp-pill"><b id="cpTotal">4</b> total courts</div></div>
 </div>
 <div class="cp-grid2" style="margin-top:14px">
-<div><div class="cp-flabel">Opens at</div><input type="time" id="cpOpen" value="07:00" style="width:100%;height:50px;border:1px solid var(--line);border-radius:11px;padding:0 14px;font-size:16px;font-weight:700;color:var(--ink);background:#fff"></div>
-<div style="display:flex;align-items:flex-end"><div class="cp-secnote" style="margin:0 0 4px">Used to split open hours into peak vs off-peak. Closes at <span id="cpClose">21:00</span>.</div></div>
+<div><div class="cp-flabel">Opens at</div><input type="time" id="cpOpen" value="06:00" style="width:100%;height:50px;border:1px solid var(--line);border-radius:11px;padding:0 14px;font-size:16px;font-weight:700;color:var(--ink);background:#fff"></div>
+<div style="display:flex;align-items:flex-end"><div class="cp-secnote" style="margin:0 0 4px">Used to split open hours into peak vs off-peak. Closes at <span id="cpClose">23:00</span>.</div></div>
 </div>
 <div style="margin-top:18px">
 <div class="cp-flabel">Hire rates (A$ per hour)</div>
-<div class="cp-secnote" style="margin-bottom:10px">Peak = weekdays from 5pm + all weekend · Off-peak = all other open hours</div>
+<div class="cp-secnote" style="margin-bottom:10px">Weekday peak window within your opening hours. All weekend hours are peak; everything else is off-peak.</div>
+<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px 14px;align-items:center;max-width:560px;margin-bottom:16px">
+<div></div><div class="cp-flabel" style="margin:0;text-align:center">From</div><div class="cp-flabel" style="margin:0;text-align:center">To</div>
+<div style="font-size:13.5px;font-weight:600">Weekday peak (Mon–Fri)</div>
+<input type="time" data-time="wkPkStart" value="16:00" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%;min-width:0;padding:0 4px;font-size:14px">
+<input type="time" data-time="wkPkEnd" value="22:00" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%;min-width:0;padding:0 4px;font-size:14px">
+</div>
 <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px 14px;align-items:center;max-width:560px">
 <div></div>
 <div class="cp-flabel" style="margin:0;text-align:center">Peak</div>
 <div class="cp-flabel" style="margin:0;text-align:center">Off-peak</div>
 <div style="font-size:13.5px;font-weight:600">Standard courts</div>
-<input type="number" min="0" data-rate="stdPeak" value="44" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
-<input type="number" min="0" data-rate="stdOff" value="33" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
+<input type="number" min="0" data-rate="stdPeak" value="80" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
+<input type="number" min="0" data-rate="stdOff" value="60" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
 <div style="font-size:13.5px;font-weight:600">Singles courts</div>
 <input type="number" min="0" data-rate="sinPeak" value="30" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
 <input type="number" min="0" data-rate="sinOff" value="22" style="height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:16px;font-weight:700;color:var(--ink);background:#fff;width:100%">
@@ -484,8 +490,8 @@ loadListings().then(function(){ setStats(); render('all'); });
 </script>
 
 <script>(function(){
-var D={indoor:3,outdoor:0,covered:1,singles:0,hours:14,open:7,occ:58.5,dpm:30.44,stdPeak:44,stdOff:33,sinPeak:30,sinOff:22};
-var S=Object.assign({},D); var PEAK_START=17;
+var D={indoor:3,outdoor:0,covered:1,singles:0,hours:17,open:6,occ:58.5,dpm:30.44,stdPeak:80,stdOff:60,sinPeak:30,sinOff:22,wkPkStart:16,wkPkEnd:22};
+var S=Object.assign({},D);
 var LIM={indoor:[0,40],outdoor:[0,40],covered:[0,40],singles:[0,40],hours:[1,24]};
 var root=document.getElementById('tab-projection'); if(!root)return;
 function q(s){return root.querySelector(s);}
@@ -494,8 +500,10 @@ function num(id,d){var e=IN(id);var v=e?parseFloat(e.value):NaN;return isNaN(v)?
 function out(k){return root.querySelector('[data-out="'+k+'"]');}
 function money(n){var neg=n<0;n=Math.abs(n);var s;if(n>=1e6)s='A$'+(n/1e6).toFixed(n>=1e7?0:1).replace(/\.0$/,'')+'M';else if(n>=1000)s='A$'+Math.round(n/1000)+'K';else s='A$'+Math.round(n);return neg?'-'+s:s;}
 function ci(n){return Math.round(n).toLocaleString('en-GB');}
-function compute(){var std=S.indoor+S.outdoor+S.covered, total=std+S.singles; var dayEnd=S.open+S.hours; var offWk=Math.max(0,Math.min(dayEnd,PEAK_START)-S.open); var pkWk=Math.max(0,dayEnd-Math.max(S.open,PEAK_START)); var peakWeek=5*pkWk+2*S.hours, offWeek=5*offWk, f=S.dpm/7; var peakHpc=peakWeek*f, offHpc=offWeek*f, occ=S.occ/100; var peakRev=occ*(std*peakHpc*S.stdPeak+S.singles*peakHpc*S.sinPeak); var offRev=occ*(std*offHpc*S.stdOff+S.singles*offHpc*S.sinOff); var monthly=peakRev+offRev; var avail=total*S.hours*S.dpm, oh=occ*avail; return {std:std,total:total,avail:avail,oh:oh,peakRev:peakRev,offRev:offRev,monthly:monthly,yearly:monthly*12,per:total?monthly/total:0};}
+function compute(){var std=S.indoor+S.outdoor+S.covered, total=std+S.singles; var dayEnd=S.open+S.hours; function ov(a,b){return Math.max(0,Math.min(dayEnd,b)-Math.max(S.open,a));} var pkWk=ov(S.wkPkStart,S.wkPkEnd), pkWe=S.hours; var peakWeek=5*pkWk+2*pkWe, offWeek=5*(S.hours-pkWk)+2*(S.hours-pkWe), f=S.dpm/7; var peakHpc=peakWeek*f, offHpc=offWeek*f, occ=S.occ/100; var peakRev=occ*(std*peakHpc*S.stdPeak+S.singles*peakHpc*S.sinPeak); var offRev=occ*(std*offHpc*S.stdOff+S.singles*offHpc*S.sinOff); var monthly=peakRev+offRev; var avail=total*S.hours*S.dpm, oh=occ*avail; return {std:std,total:total,avail:avail,oh:oh,peakRev:peakRev,offRev:offRev,monthly:monthly,yearly:monthly*12,per:total?monthly/total:0};}
+function fmtT(h){var d=h>=24;h=h%24;var hh=Math.floor(h),mm=Math.round((h-hh)*60);if(mm===60){hh+=1;mm=0;}return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm+(d?' (next day)':'');}
 function render(){
+var cl=q('#cpClose'); if(cl)cl.textContent=fmtT(S.open+S.hours);
 ['indoor','outdoor','covered','singles','hours'].forEach(function(k){var e=out(k);if(e)e.textContent=S[k];});
 q('#cpTotal').textContent=S.indoor+S.outdoor+S.covered+S.singles; q('#cpOccNum').textContent=S.occ;
 var r=compute();
@@ -517,6 +525,7 @@ root.querySelectorAll('.cp-stepper').forEach(function(st){var k=st.dataset.step;
 root.querySelectorAll('.cp-stepper').forEach(function(st){var k=st.dataset.step;st.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){var dir=+b.dataset.dir,lo=LIM[k][0],hi=LIM[k][1];S[k]=Math.max(lo,Math.min(hi,S[k]+dir));render();});});});
 var occ=q('#cpOccIn'); if(occ)occ.addEventListener('input',function(){var v=parseFloat(occ.value);if(isNaN(v))return;S.occ=v;render();});
 var op=q('#cpOpen'); if(op)op.addEventListener('input',function(){var p=op.value.split(':');var h=parseInt(p[0],10)+(parseInt(p[1],10)||0)/60;if(!isNaN(h))S.open=h;render();});
+root.querySelectorAll('input[data-time]').forEach(function(inp){inp.addEventListener('input',function(){var p=inp.value.split(':');var h=parseInt(p[0],10)+(parseInt(p[1],10)||0)/60;if(!isNaN(h)){S[inp.dataset.time]=h;render();}});});
 root.querySelectorAll('input[data-rate]').forEach(function(inp){inp.addEventListener('input',function(){var v=parseFloat(inp.value);if(isNaN(v))return;S[inp.dataset.rate]=v;render();});});
 ['cpStaff','cpRR','cpOther','cpUtil','cpMaint','cpSoft'].forEach(function(id){var e=IN(id); if(e) e.addEventListener('input',render);});
 var tabs=document.getElementById('cpTabs');
