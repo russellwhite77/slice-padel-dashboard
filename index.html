@@ -389,16 +389,11 @@ document.addEventListener('change',function(e){if(e.target&&e.target.id==='osImp
 <script>
 let sites = [];
 
-const ARCHIVE_DAYS = 10;
-const DAY = 864e5;
-function ageDays(s){ if(!s.added) return 0; return Math.floor((Date.now() - new Date(s.added+'T00:00:00')) / DAY); }
-function isArchived(s){ return ageDays(s) > ARCHIVE_DAYS; }
+function isArchived(s){ return !!s.archived; }
 function fmt(s){ return s.added ? new Date(s.added+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : ''; }
 function dateLabel(s){
 if(!s.added) return '';
-if(isArchived(s)) return 'Added '+fmt(s)+' · archived';
-const left = ARCHIVE_DAYS - ageDays(s);
-return 'Added '+fmt(s)+' · archives in '+left+' day'+(left===1?'':'s');
+return 'Added '+fmt(s)+(isArchived(s)?' · archived':'');
 }
 function setStats(){
 const active = sites.filter(s=>!isArchived(s));
@@ -425,7 +420,7 @@ if(filter==='wm') return s.wm;
 return true;
 });
 if(!list.length){
-g.innerHTML = '<div class="empty">'+(filter==='archive'?('Nothing archived yet — properties move here after '+ARCHIVE_DAYS+' days on the board.'):'No sites in this view.')+'</div>';
+g.innerHTML = '<div class="empty">'+(filter==='archive'?('Nothing archived yet — set a property to Archived in the manager to move it here.'):'No sites in this view.')+'</div>';
 return;
 }
 list.forEach(s=>{
@@ -463,9 +458,10 @@ function loadListings(){
   return fetch(AU_LISTINGS_URL + '?select=*&order=added.desc', { headers: sbH2() })
     .then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(rows){
-      sites = rows.filter(function(r){ return !r.hidden; }).map(function(r){
+      sites = rows.map(function(r){
         return {
           id: r.id,
+          archived: !!r.hidden,
           added: r.added,
           img: r.img,
           url: r.url,
